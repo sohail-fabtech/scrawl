@@ -270,7 +270,7 @@ export const accountBlockDef: ComponentDef = {
     y += d + 22
 
     const labels = ["Display name", "Email", "Where you are", "Short bio"]
-    const values = ["Pablo Scribbles", "hi@jscrate.dev", "Somewhere warm", "Draws boxes for money"]
+    const values = ["Pablo Scribbles", "hi@jscrate.dev", "Punjab, Pakistan", "Draws boxes for money"]
     const n = clamp(num(p, "fields", 3), 1, 4)
     const footTop = h - 56
     const fieldH = clamp((footTop - 6 - y - 12 * (n - 1)) / n, 46, 58)

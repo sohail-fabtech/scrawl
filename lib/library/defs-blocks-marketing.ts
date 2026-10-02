@@ -1779,7 +1779,7 @@ export const changelogDef: ComponentDef = {
 const CONTACT_ROWS: [string, string][] = [
   ["envelope", "hi@jscrate.dev"],
   ["phone", "+92 311 6379423"],
-  ["map-pin", "Somewhere with good light"],
+  ["map-pin", "Punjab, Pakistan"],
 ]
 
 export const contactFormBlockDef: ComponentDef = {
