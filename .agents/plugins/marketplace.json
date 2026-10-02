@@ -1,0 +1,19 @@
+{
+  "name": "scrawl-plugins",
+  "interface": {
+    "displayName": "Scrawl Plugins"
+  },
+  "plugins": [
+    {
+      "name": "scrawl",
+      "source": {
+        "source": "local",
+        "path": "./plugins/scrawl"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,313 @@
+"use client"
+
+// ---------------------------------------------------------------------------
+// The file drawer — every document this browser has ever held, kept in
+// localStorage. Each doc lives under its own key with a small index on the
+// side, so the file menu can list names and times without parsing every
+// document it has.
+//
+// No cloud, no accounts. Clearing site data still clears everything, which is
+// why Export stays one keystroke away.
+//
+// The room here is small and shared: a browser hands the whole origin a few
+// megabytes, and pictures ride along as data URLs, so a few pasted screenshots
+// can fill it on their own. When it fills, scrawl stops writing and says so. It
+// never makes room by throwing out a drawing the user didn't choose to lose.
+// ---------------------------------------------------------------------------
+
+import type { ScrawlDoc, ScrawlNode } from "./types"
+import { documentMetadata } from "./doc"
+import { canWrite } from "./tabs"
+import { DEFAULT_BIG_NUDGE, normalizeBigNudge } from "./nudge"
+import { DEFAULT_LOOK, knownLook, type FontMode, type Look, type ThemeName } from "./theme"
+
+export interface FileMeta {
+  id: string
+  name: string
+  updatedAt: number
+  /** A shortcut to a shared canvas; its contents and credentials live elsewhere. */
+  agentId?: string
+}
+
+export interface StoredDoc extends Pick<ScrawlDoc, "variations" | "comments"> {
+  id: string
+  name: string
+  nodes: Record<string, ScrawlNode>
+  order: string[]
+  updatedAt: number
+  /** how this drawing looks — absent on documents saved before looks existed */
+  look?: Look
+}
+
+/** Everything that belongs to the app rather than to any one document. */
+export interface Prefs {
+  /** the last look you set — what a new document starts from, nothing more */
+  look: Look
+  contextRow: boolean
+  /** Shift's step for both move and resize nudges. */
+  bigNudge: number
+  activeId: string | null
+}
+
+/** exported so another tab writing the drawer can be noticed */
+export const INDEX_KEY = "scrawl:files:v1"
+export const SHARED_INDEX_KEY = "scrawl:shared-files:v1"
+const PREFS_KEY = "scrawl:prefs:v1"
+const LEGACY_KEY = "scrawl:doc:v1"
+/** exported so a tab can notice another one writing the document it has open */
+export const fileKey = (id: string) => `scrawl:file:${id}`
+
+/**
+ * Past this many the drawer starts forgetting its oldest documents.
+ *
+ * This is the one place scrawl lets go of something on its own, and it stays
+ * silent about it on purpose: it only ever reaches the document you last
+ * touched forty drawings ago, it fires during an autosave nobody is watching,
+ * and there is nothing to do about it once it has — a flash reading "your
+ * fortieth-oldest drawing is gone" is alarm without an action. The quota
+ * warning below is the opposite on all three counts, which is why it speaks.
+ */
+export const MAX_FILES = 40
+
+function readJSON(key: string): unknown {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+/** Returns false when the browser refuses the write — usually a full quota. */
+function writeJSON(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function drop(key: string) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // nothing to do about it
+  }
+}
+
+function isMeta(v: unknown): v is FileMeta {
+  const m = v as FileMeta
+  return !!m && typeof m.id === "string" && typeof m.name === "string" && typeof m.updatedAt === "number"
+}
+
+const byRecent = (a: FileMeta, b: FileMeta) => b.updatedAt - a.updatedAt
+
+/** Every saved document, newest first. */
+export function listFiles(): FileMeta[] {
+  const parsed = readJSON(INDEX_KEY)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter(isMeta).sort(byRecent)
+}
+
+function listSharedFiles(): FileMeta[] {
+  const parsed = readJSON(SHARED_INDEX_KEY)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter((f): f is FileMeta =>
+    isMeta(f) && typeof f.agentId === "string" &&
+    /^[A-Za-z0-9_-]{1,80}$/.test(f.agentId) && f.id === `agent_${f.agentId}`,
+  ).sort(byRecent)
+}
+
+export function listRecentFiles(): FileMeta[] {
+  const shared = process.env.NEXT_PUBLIC_SCRAWL_OFFLINE === "1" ? [] : listSharedFiles()
+  return [...listFiles(), ...shared].sort(byRecent)
+}
+
+/** Keep shortcuts separate so visiting shared canvases never evicts local drawings. */
+export function rememberSharedFile(agentId: string, name: string, updatedAt = Date.now()): boolean {
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(agentId)) return false
+  const id = `agent_${agentId}`
+  return writeJSON(SHARED_INDEX_KEY, [
+    { id, agentId, name, updatedAt },
+    ...listSharedFiles().filter((f) => f.id !== id),
+  ].slice(0, MAX_FILES))
+}
+
+export function forgetSharedFile(id: string): boolean {
+  return writeJSON(SHARED_INDEX_KEY, listSharedFiles().filter((f) => f.id !== id))
+}
+
+/** Same contract as writeJSON: false when the browser refused it. */
+function writeIndex(list: FileMeta[]): boolean {
+  return writeJSON(INDEX_KEY, list)
+}
+
+export function readFile(id: string): StoredDoc | null {
+  const doc = readJSON(fileKey(id)) as StoredDoc | null
+  if (!doc || typeof doc !== "object" || !doc.nodes || !Array.isArray(doc.order)) return null
+  const metadata = documentMetadata(doc)
+  return {
+    ...doc,
+    variations: metadata.variations,
+    comments: metadata.comments,
+    id,
+    name: typeof doc.name === "string" ? doc.name : "untitled scribbles",
+    // a document written before looks existed has none; the caller keeps the
+    // look already on screen rather than snapping the canvas to a default
+    look: doc.look ? knownLook(doc.look, DEFAULT_LOOK) : undefined,
+  }
+}
+
+/** What a save changed, and whether the drawing actually landed. */
+export interface SavePlan {
+  /** the index as it should now read */
+  index: FileMeta[]
+  /** documents to forget — only ever the drawer's own tail, never a casualty */
+  forget: string[]
+  /** the browser refused the write: what's on disk is whatever was there before */
+  full: boolean
+  /** another tab has written this document since this one last read it, so
+   *  scrawl refused the write itself: what's on disk is the other tab's */
+  stale: boolean
+}
+
+/**
+ * What a save should do to the drawer, given what it holds, the document in
+ * hand, and whether the browser accepted it. Pure, so the rules can be read
+ * and tested without a localStorage in the room — see scripts/test-files.ts.
+ *
+ * scrawl used to answer a refused write by deleting the user's other documents,
+ * oldest first, until the one in hand fit. That is the worst trade a drawing
+ * program can make: it destroyed work nobody asked it to destroy, silently and
+ * with no undo, to save work that might not have been worth more. So a failed
+ * write now changes nothing at all — not the tail, not the index, not one
+ * other document. The drawing stays on screen and scrawl says so out loud.
+ *
+ * Leaving the index untouched is also the honest answer for the document
+ * itself. If it has been saved before, its old bytes are still on disk and its
+ * old entry still describes them — dropping the entry would orphan a document
+ * that genuinely exists. If it has never been saved, there is nothing to point
+ * an entry at, and a drawer row that opens onto an empty canvas would be a
+ * worse lie than a missing row.
+ */
+export function planSave(index: FileMeta[], meta: FileMeta, stored: boolean): SavePlan {
+  if (!stored) return { index, forget: [], full: true, stale: false }
+  const next = [meta, ...index.filter((f) => f.id !== meta.id)]
+  return { index: next.slice(0, MAX_FILES), forget: next.slice(MAX_FILES).map((f) => f.id), full: false, stale: false }
+}
+
+/**
+ * Write a document and report how the drawer stands afterwards.
+ *
+ * The document goes down first and the bookkeeping follows, so that a browser
+ * that refuses the write leaves every other file exactly where it was — the
+ * tail trim included, since a document that never landed has no business
+ * pushing anything off the end.
+ *
+ * `seen` is the `updatedAt` of the bytes the caller last read or wrote for this
+ * document, and it is what stops a second tab from writing over a version it
+ * never saw. The index has to be read either way, so the check is a lookup and
+ * no more — see canWrite in lib/tabs. Pass null for a document that has never
+ * been on disk.
+ */
+export function saveFile(doc: StoredDoc, seen: number | null): SavePlan {
+  const index = listFiles()
+  if (!canWrite(index, doc.id, seen)) return { index, forget: [], full: false, stale: true }
+  const meta: FileMeta = { id: doc.id, name: doc.name, updatedAt: doc.updatedAt }
+  const plan = planSave(index, meta, writeJSON(fileKey(doc.id), doc))
+  // nothing landed, so there is nothing to write down — and the index write
+  // would only be one more thing for a full quota to refuse
+  if (plan.full) return plan
+  // The index can be refused on its own. It is small, but it *grows* — a
+  // document's first save adds an entry, a rename lengthens one — so the write
+  // that fills the last of the quota can be this one rather than the document.
+  // Then the bytes are on disk and the drawer still describes the version
+  // before them, which is a save that only half happened, and calling it a
+  // success is the expensive half of the lie: the caller would move its `seen`
+  // stamp forward onto a version the index has never heard of, and from the
+  // next save on canWrite would read that disagreement as another tab writing
+  // this document and refuse every write for the rest of the session — over a
+  // quota, in the one tab there is. So this counts as full, on the same policy
+  // planSave argues for above: a failed save changes nothing at all, and the
+  // drawing stays owed until there is room for it.
+  if (!writeIndex(plan.index)) return { index, forget: [], full: true, stale: false }
+  // Only now: the tail is trimmed against an index that says so. Dropping
+  // first would leave the refused case listing documents whose bytes are
+  // already gone — rows in the drawer that open onto nothing.
+  for (const id of plan.forget) drop(fileKey(id))
+  return plan
+}
+
+export function deleteFile(id: string): FileMeta[] {
+  drop(fileKey(id))
+  const index = listFiles().filter((f) => f.id !== id)
+  writeIndex(index)
+  return index
+}
+
+export function loadPrefs(): Prefs {
+  const p = (readJSON(PREFS_KEY) ?? {}) as Partial<Prefs> & Partial<Look>
+  return {
+    // prefs used to keep the look's fields flat, so read them either way
+    look: knownLook(p.look ?? p, DEFAULT_LOOK),
+    contextRow: p.contextRow === true,
+    bigNudge: normalizeBigNudge(p.bigNudge),
+    activeId: typeof p.activeId === "string" ? p.activeId : null,
+  }
+}
+
+export function savePrefs(p: Prefs) {
+  writeJSON(PREFS_KEY, p)
+}
+
+/**
+ * scrawl used to keep a single autosaved document. Move it into the drawer as
+ * a real file the first time we see it, so nobody's canvas disappears.
+ */
+export function migrateLegacyDoc(newId: () => string): { doc: StoredDoc; prefs: Prefs } | null {
+  const old = readJSON(LEGACY_KEY) as
+    | { fileName?: string; nodes?: Record<string, ScrawlNode>; order?: string[]; theme?: ThemeName; font?: FontMode; contextRow?: boolean }
+    | null
+  if (!old || !old.nodes || !Array.isArray(old.order)) {
+    drop(LEGACY_KEY)
+    return null
+  }
+  // the legacy doc's theme and font were app settings; they become this
+  // document's look, since it is the only document there was
+  const look = knownLook({ theme: old.theme, font: old.font }, DEFAULT_LOOK)
+  const doc: StoredDoc = {
+    id: newId(),
+    name: old.fileName || "untitled scribbles",
+    nodes: old.nodes,
+    order: old.order,
+    updatedAt: Date.now(),
+    look,
+  }
+  // a brand new id: there is nothing on disk under it to be careful about
+  saveFile(doc, null)
+  const prefs: Prefs = {
+    look,
+    contextRow: old.contextRow === true,
+    bigNudge: DEFAULT_BIG_NUDGE,
+    activeId: doc.id,
+  }
+  savePrefs(prefs)
+  drop(LEGACY_KEY)
+  return { doc, prefs }
+}
+
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+/** "just now", "20m", "3h", "yesterday", "Mar 4" — short enough for a menu. */
+export function relativeTime(ts: number, now = Date.now()): string {
+  const d = now - ts
+  if (d < MINUTE) return "just now"
+  if (d < HOUR) return `${Math.floor(d / MINUTE)}m ago`
+  if (d < DAY) return `${Math.floor(d / HOUR)}h ago`
+  if (d < 2 * DAY) return "yesterday"
+  if (d < 7 * DAY) return `${Math.floor(d / DAY)}d ago`
+  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}

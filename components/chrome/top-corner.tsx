@@ -1,0 +1,237 @@
+"use client"
+
+// ---------------------------------------------------------------------------
+// Top-left corner — the wordmark doubles as the file menu, the file name is
+// inline-editable. No toolbar chrome beyond that, on purpose.
+//
+// It is a *file* menu: documents, saving, editing, the view. How the drawing
+// looks — ink, paper, lettering, the grid — lives in the Page panel, which is
+// what the inspector shows whenever nothing is selected. Two doors onto the
+// same setting is how a menu turns into a junk drawer, so appearance has one.
+// ---------------------------------------------------------------------------
+
+import { useRef, useState } from "react"
+import { useScrawl } from "@/lib/store"
+import { exportDoc, importDoc } from "@/lib/file-io"
+import { saveImageWithNotice } from "@/lib/export-image"
+import { ArrowsOutIcon, ArrowUpRightIcon, CaretDownIcon } from "@phosphor-icons/react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Panel } from "@/components/ui/panel"
+import { kbd } from "@/lib/shortcuts"
+import { RecentFiles } from "@/components/chrome/recent-files"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
+import type { FileMeta } from "@/lib/files"
+
+export function TopCorner() {
+  const st = useScrawl.getState
+  // Rename hands focus to the floating name field, so the menu must not yank
+  // focus back to its trigger on the way out.
+  const keepFocus = useRef(false)
+  const menuTrigger = useRef<HTMLButtonElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [removeOpen, setRemoveOpen] = useState(false)
+  const [fileToRemove, setFileToRemove] = useState<FileMeta | null>(null)
+
+  return (
+    <Panel className="absolute top-4 left-4 z-30 flex-row items-center gap-1 p-1">
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger
+          ref={menuTrigger}
+          title="file menu"
+          className="flex items-center gap-1.5 rounded-chrome-sm px-2.5 py-1.5 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-[var(--sq-ink)]/40"
+        >
+          {/* deliberately off the chrome type scale — this is the wordmark, not a
+              control, and it should out-weigh every label around it */}
+          <span
+            className="font-sans text-[17px] leading-none font-bold tracking-[-0.03em] select-none"
+            style={{ color: "var(--sq-ink)" }}
+          >
+            scrawl
+          </span>
+          <CaretDownIcon className="size-3 text-muted-foreground" weight="bold" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-64"
+          // Rename hands focus to the floating name field; returning focus to
+          // the wordmark here would snatch it straight back.
+          finalFocus={() => {
+            if (!keepFocus.current) return true
+            keepFocus.current = false
+            return false
+          }}
+        >
+          <DropdownMenuItem onClick={() => st().newFile()}>New file</DropdownMenuItem>
+          <RecentFiles onRemoveFile={(file) => {
+            keepFocus.current = true
+            setFileToRemove(file)
+            setMenuOpen(false)
+            setRemoveOpen(true)
+          }} />
+          <DropdownMenuItem onClick={importDoc}>Open from disk…</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => st().saveNow()}>
+            Save
+            <DropdownMenuShortcut>{kbd("mod+s")}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={exportDoc}>
+            Export a copy
+            <DropdownMenuShortcut>{kbd("mod+shift+s")}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          {/* a picture rather than a document, and the same rule as ⌘⇧C: the
+              selection if there is one, otherwise everything */}
+          <DropdownMenuItem onClick={() => saveImageWithNotice("png")}>Export PNG</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => saveImageWithNotice("svg")}>Export SVG</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              keepFocus.current = true
+              st().setRenamingFile(true)
+            }}
+          >
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => st().setCommandOpen(true)}>
+            Find anything
+            <DropdownMenuShortcut>{kbd("mod+k")}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => st().setShortcutsOpen(true)}>
+            Keyboard shortcuts
+            <DropdownMenuShortcut>{kbd("shift+/")}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => st().undo()}>
+            Undo
+            <DropdownMenuShortcut>⌘Z</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => st().redo()}>
+            Redo
+            <DropdownMenuShortcut>⇧⌘Z</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* ink, paper, lettering and the grid used to sit here; they live in
+              the Page panel now — deselect and the inspector is holding them */}
+          <DropdownMenuItem onClick={() => st().setViewport({ x: 0, y: 0, zoom: 1 })}>
+            Reset zoom
+            <DropdownMenuShortcut>{kbd("mod+0")}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => st().clearCanvas()}>
+            Clear canvas
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* scrawl is open source — the one row in here that leaves the app */}
+          <DropdownMenuItem
+            render={
+              <a
+                href="https://github.com/pablostanley/squig"
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            }
+          >
+            Contribute on GitHub
+            <DropdownMenuShortcut className="pl-4">
+              <ArrowUpRightIcon className="size-3.5" />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ConfirmationDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        title={fileToRemove?.agentId ? "Remove from recent files?" : "Delete drawing?"}
+        confirmLabel={fileToRemove?.agentId ? "Remove" : "Delete"}
+        destructive={!fileToRemove?.agentId}
+        finalFocus={menuTrigger}
+        onConfirm={() => {
+          if (fileToRemove) st().deleteFile(fileToRemove.id)
+        }}
+      >
+        {fileToRemove?.agentId
+          ? `Remove “${fileToRemove.name}” from this browser’s recent files? The shared canvas stays online. You can reopen it with its link.`
+          : `Delete “${fileToRemove?.name}” from this browser? This cannot be undone. Export a copy first if you want to keep it.`}
+      </ConfirmationDialog>
+    </Panel>
+  )
+}
+
+export function ZoomPill() {
+  const zoom = useScrawl((s) => s.viewport.zoom)
+  const empty = useScrawl((s) => s.order.length === 0)
+  const st = useScrawl.getState
+
+  const zoomBy = (factor: number) => {
+    const v = st().viewport
+    const cx = window.innerWidth / 2
+    const cy = window.innerHeight / 2
+    const z = Math.min(4, Math.max(0.1, v.zoom * factor))
+    const k = z / v.zoom
+    st().setViewport({ zoom: z, x: cx - (cx - v.x) * k, y: cy - (cy - v.y) * k })
+  }
+
+  return (
+    <Panel className="absolute bottom-4 left-4 z-30 flex-row items-center gap-0.5 px-1 py-0.5">
+      <button
+        type="button"
+        className="size-ctl rounded-chrome-sm text-row text-muted-foreground hover:bg-accent"
+        onClick={() => zoomBy(1 / 1.25)}
+        aria-label="Zoom out"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        className="h-ctl min-w-12 rounded-chrome-sm px-1 text-center text-label text-muted-foreground tabular-nums hover:bg-accent"
+        onClick={() => st().setViewport({ x: 0, y: 0, zoom: 1 })}
+        title="reset view (⌘0)"
+        aria-label={`Zoom ${Math.round(zoom * 100)}%, reset view`}
+      >
+        {Math.round(zoom * 100)}%
+      </button>
+      <button
+        type="button"
+        className="size-ctl rounded-chrome-sm text-row text-muted-foreground hover:bg-accent"
+        onClick={() => zoomBy(1.25)}
+        aria-label="Zoom in"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        className="flex size-ctl items-center justify-center rounded-chrome-sm text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+        onClick={() => st().zoomToFit()}
+        disabled={empty}
+        title={`Zoom to fit (${kbd("shift+1")})`}
+        aria-label="Zoom to fit"
+      >
+        <ArrowsOutIcon className="size-3.5" />
+      </button>
+    </Panel>
+  )
+}
+
+/** Bottom-right nudge toward ⌘K. */
+export function CommandHint() {
+  const st = useScrawl.getState
+  return (
+    <button
+      type="button"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={() => st().setCommandOpen(true)}
+      data-scrawl-chrome
+      data-command-trigger
+      className="absolute bottom-4 left-1/2 z-30 flex h-ctl -translate-x-1/2 items-center gap-2 rounded-full border border-border/80 bg-background px-gutter text-label text-muted-foreground shadow-panel hover:text-foreground"
+    >
+      Search
+      <kbd className="inline-flex h-5 items-center rounded-chrome-xs border bg-muted px-1 font-sans text-micro">⌘K</kbd>
+    </button>
+  )
+}

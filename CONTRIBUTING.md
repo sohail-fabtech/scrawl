@@ -1,0 +1,80 @@
+# Contributing
+
+scrawl is a small project with a specific taste. Pull requests are welcome, and
+so is opening an issue first if you're about to spend real time on something —
+a five-minute conversation beats a rejected branch.
+
+## Getting set up
+
+```bash
+pnpm install
+pnpm dev
+```
+
+That's the whole setup. No environment variables, no database, no accounts —
+documents live in the browser's own storage.
+
+Before you push:
+
+```bash
+pnpm verify   # lint, then test, then build
+```
+
+`pnpm test` on its own type-checks and runs every suite under
+`scripts/test-*.ts`; pass names to narrow it while you work, as in
+`pnpm test crop text`. All three steps should be green before you open a pull
+request.
+
+## The easiest thing to contribute
+
+A component. The library is just data: a `ComponentDef` whose `render()`
+returns drawing primitives, added to an array.
+[`lib/library/AUTHORING.md`](lib/library/AUTHORING.md) walks through it, and
+`/kitchen-sink` renders every def at its default size and again squeezed, so
+you can see a bad layout without dragging a hundred things onto a canvas.
+
+Good candidates: anything in the shadcn/ui vocabulary that's missing, and
+blocks or templates for screens people actually draw.
+
+## What tends to get merged
+
+**It looks drawn, not rendered.** Everything on the canvas goes through
+rough.js. The exception is icons, which are drawn crisp — at 14px the wobble
+just reads as mush.
+
+**It matches Figma's keyboard.** If Figma has a shortcut for it, scrawl uses
+the same one. Muscle memory is the feature.
+
+**It stays low fidelity on purpose.** scrawl is a napkin for working out ideas,
+not a mockup tool. Features that push toward pixel-precision — gradients,
+shadows, exact color pickers — are usually the wrong direction, because the
+whole point is that nothing looks decided yet.
+
+**It keeps the canvas backend-free.** No accounts, no sync, no cloud, and your
+files stay in the browser. The optional agent workspace is the one server-side
+piece scrawl has, and it stays optional: the canvas itself works with no
+database at all.
+
+## Style
+
+Match the file you're in. [AGENTS.md](AGENTS.md) is the short version of how
+this repo works — the map, the gate, and where the big files come apart. A few
+conventions worth knowing:
+
+- Comments explain *why*, not what. Most of the codebase's comments are there
+  because a decision would look arbitrary otherwise — keep that bar.
+- Components never render to DOM. They return primitives the canvas draws.
+- Geometry and selection logic lives in `lib/` and is testable without React.
+  If you're writing math, add a case to `scripts/test-geometry.ts` or
+  `scripts/test-selection.ts`.
+- Keep the top-level UI concise. Show actions, values, live status, failures,
+  recovery, and consequences directly. Put non-essential explanation behind a
+  delayed tooltip on the relevant label or row, keep it to one precise
+  sentence, and make the same help available from the keyboard and to assistive
+  technology, with tap access for touch. Use a disclosure for longer guidance.
+  Never hide critical information in a tooltip.
+
+## Reporting bugs
+
+Include what you drew, what you expected, and what happened. A `.scrawl` file
+exported with `⇧⌘S` is the fastest possible repro.

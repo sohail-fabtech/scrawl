@@ -1,0 +1,73 @@
+"use client"
+
+// ---------------------------------------------------------------------------
+// Local drawings and visited shared canvases, newest first. The caller keeps
+// confirmation outside the menu so closing it cannot unmount the dialog.
+// ---------------------------------------------------------------------------
+
+import { useScrawl } from "@/lib/store"
+import { relativeTime, type FileMeta } from "@/lib/files"
+import { TrashIcon } from "@phosphor-icons/react"
+import {
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu"
+
+/** past this the menu would be a scroll, and old files are the drawer's job */
+const SHOWN = 12
+export function RecentFiles({ onRemoveFile }: { onRemoveFile: (file: FileMeta) => void }) {
+  const files = useScrawl((s) => s.files)
+  const docId = useScrawl((s) => s.docId)
+  const full = useScrawl((s) => s.drawerFull)
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>Open recent</DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-80">
+        {files.length === 0 ? (
+          <p className="px-2.5 py-1.5 text-row text-muted-foreground">nothing saved yet</p>
+        ) : (
+          files.slice(0, SHOWN).map((f) => <FileRow key={f.id} file={f} current={f.id === docId} onRemove={() => onRemoveFile(f)} />)
+        )}
+        {/* The whole explanation lands here rather than under the file name,
+            because this is the list you're looking at when you go to make
+            room — and the trash to do it with is on the row above. */}
+        {full && (
+          <p role="alert" className="mt-1 border-t px-2.5 pt-2 pb-1 text-label leading-relaxed text-muted-foreground">
+            Saving paused: storage full. Export a backup, then delete a drawing to free space.
+          </p>
+        )}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
+
+function FileRow({ file, current, onRemove }: { file: FileMeta; current: boolean; onRemove: () => void }) {
+  const st = useScrawl.getState
+  return (
+    <DropdownMenuItem
+      className="gap-2"
+      label={file.name}
+      selected={current}
+      onClick={() => st().openFile(file.id)}
+      // The file you're in stays put — open another one first.
+      action={current ? null : (
+        <button
+          type="button"
+          aria-label={file.agentId ? `remove ${file.name} from recent files` : `delete ${file.name}`}
+          title={file.agentId ? "remove from recent files" : "delete"}
+          onClick={onRemove}
+          className="flex size-6 items-center justify-center rounded-chrome-sm text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-destructive focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring group-hover/row:opacity-100 group-focus-within/row:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          <TrashIcon className="size-3.5" />
+        </button>
+      )}
+    >
+      <span className="min-w-0 flex-1 truncate">{file.name}</span>
+      {file.agentId && <span className="shrink-0 text-label text-muted-foreground">shared</span>}
+      <span className="shrink-0 text-label text-muted-foreground">{relativeTime(file.updatedAt)}</span>
+    </DropdownMenuItem>
+  )
+}
