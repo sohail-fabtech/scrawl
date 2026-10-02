@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/docs/", "/llms.txt", "/llms-full.txt", "/openapi.json"],
       disallow: ["/api/", "/mcp"],
     },
-    sitemap: "https://scrawl.sh/sitemap.xml",
+    sitemap: "https://scrawl.jscrate.dev/sitemap.xml",
   }
 }

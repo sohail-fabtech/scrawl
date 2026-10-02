@@ -24,7 +24,7 @@ export const origin = () => {
   const preview =
     process.env.VERCEL_ENV === "preview" &&
     (process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL)
-  return preview ? `https://${preview}` : "https://scrawl.sh"
+  return preview ? `https://${preview}` : "https://scrawl.jscrate.dev"
 }
 export const publicDoc = (row: StoredDocument) => ({
   id: row.id,

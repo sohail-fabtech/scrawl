@@ -4,7 +4,7 @@ A modern wireframing canvas for people who think by drawing, with AI built in.
 Like Excalidraw or tldraw, but with real UI components and an AI agent that can
 read and edit your canvas.
 
-**[Try it live at scrawl.sh →](https://scrawl.sh)**
+**[Try it live at scrawl.jscrate.dev →](https://scrawl.jscrate.dev)**
 
 ![A scrawl canvas: a landing page wireframe drawn in blue ink — nav, hero, feature row, footer — with the tool's rail on the left and the page inspector on the right](docs/hero.jpg)
 
@@ -178,7 +178,7 @@ Open the local editor URL printed by the command and use **Connect agent**
 for the session's connection details. A missing file is created; an existing
 file is opened. Keep the process running while you work. For an MCP client
 that launches its own process, use the direct Node configuration in
-[the MCP guide](https://scrawl.sh/docs/mcp). Run one companion per file.
+[the MCP guide](https://scrawl.jscrate.dev/docs/mcp). Run one companion per file.
 
 If you choose to move a browser drawing into a companion session,
 export a `.scrawl.json` copy first, then open that saved file with the companion.
@@ -195,7 +195,7 @@ recovery path so their owners can export local copies.
 - [Agent guide](docs/agents.md): local files, live MCP sessions and the browser API.
 - [Architecture](docs/agent-architecture.md): persistence, concurrency and local access.
 - [File format](docs/format.md): the portable document model.
-- [Complete agent docs](https://scrawl.sh/llms-full.txt): tools, setup and limits.
+- [Complete agent docs](https://scrawl.jscrate.dev/llms-full.txt): tools, setup and limits.
 - [Plugin](plugins/scrawl): an optional wireframing workflow and local setup skill.
 
 Install the workflow plugin from this repository:

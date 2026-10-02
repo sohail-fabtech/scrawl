@@ -242,7 +242,7 @@ export const settingsDef: ComponentDef = {
     }
     prims.push(...sub(inputDef, { label: "Display name", placeholder: "Pablo S." }, cx, y, cw, fieldH))
     y += fieldH + g(12)
-    prims.push(...sub(inputDef, { label: "Email", icon: "mail", placeholder: "pablo@scrawl.sh" }, cx, y, cw, fieldH))
+    prims.push(...sub(inputDef, { label: "Email", icon: "mail", placeholder: "hi@jscrate.dev" }, cx, y, cw, fieldH))
     y += fieldH + g(16)
     prims.push(...sub(switchDef, { label: "Email me way too often", on: true }, cx, y, cw, 26))
     y += 26 + g(10)

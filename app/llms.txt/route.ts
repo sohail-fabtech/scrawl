@@ -8,11 +8,11 @@ export function GET() {
 
 ## Documentation
 
-${pages.map((p) => `- [${p.title}](https://scrawl.sh/docs/${p.slug}): ${p.description}`).join("\n")}
+${pages.map((p) => `- [${p.title}](https://scrawl.jscrate.dev/docs/${p.slug}): ${p.description}`).join("\n")}
 
-- [Complete docs](https://scrawl.sh/llms-full.txt)
-- [Local API schemas](https://scrawl.sh/openapi.json)
-- [Connect an agent](https://scrawl.sh/connect)
+- [Complete docs](https://scrawl.jscrate.dev/llms-full.txt)
+- [Local API schemas](https://scrawl.jscrate.dev/openapi.json)
+- [Connect an agent](https://scrawl.jscrate.dev/connect)
 
 ## Continue the open canvas
 

@@ -13,7 +13,7 @@ help:
 	@echo ""
 	@echo "  make install     pnpm install"
 	@echo "  make dev         Next.js dev server"
-	@echo "  make build       Production Next.js build (server / scrawl.sh)"
+	@echo "  make build       Production Next.js build (server / scrawl.jscrate.dev)"
 	@echo "  make build-xdc   Static export + Webxdc archive → $(OUT_XDC)"
 	@echo "  make package     Alias for make build-xdc"
 	@echo "  make clean       Remove .next/, out/, dist/"

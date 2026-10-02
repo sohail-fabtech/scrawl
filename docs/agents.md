@@ -35,7 +35,7 @@ files are validated before editing. The selected file is the source of truth.
 Keep the process running. It binds only to `127.0.0.1` and serves the editor,
 HTTP tools and MCP from that local origin. No database or account is involved.
 
-If the drawing is already open on scrawl.sh, keep working in that tab using
+If the drawing is already open on scrawl.jscrate.dev, keep working in that tab using
 the browser door below. Only export a `.scrawl.json` copy when the user wants
 to move the drawing to a disk file, then start the companion for that file.
 The website cannot infer its absolute path or silently link browser storage
@@ -76,7 +76,7 @@ a workflow skill; the checkout and selected file supply the runtime.
 
 MCP prefixes tool names with `scrawl_`. The local HTTP equivalent is
 `POST /api/v1/tools/{name}` with the same JSON input and the session's bearer
-token. Use the actual loopback URL printed by the companion, never scrawl.sh.
+token. Use the actual loopback URL printed by the companion, never scrawl.jscrate.dev.
 
 - `scrawl_local_session` over MCP, or `GET /api/local/session` over HTTP: the editor URL, selected file path and connection addresses.
 - `catalog`, `documents`, `get_document`: discover components and read the file.

@@ -25,7 +25,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://scrawl.sh"),
+  metadataBase: new URL("https://scrawl.jscrate.dev"),
   applicationName: "scrawl",
   title,
   description,

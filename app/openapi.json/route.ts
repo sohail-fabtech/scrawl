@@ -68,7 +68,7 @@ export function GET() {
       title: "Scrawl Local Agent API",
       version: "2.0.0",
       description:
-        "Tools for one local .scrawl.json file. Start the local companion and use its printed port and session token. Hosted writes at scrawl.sh are retired. MCP tools use scrawl_ plus the operationId. Revision numbers are opaque tokens; never increment or infer their ordering.",
+        "Tools for one local .scrawl.json file. Start the local companion and use its printed port and session token. Hosted writes at scrawl.jscrate.dev are retired. MCP tools use scrawl_ plus the operationId. Revision numbers are opaque tokens; never increment or infer their ordering.",
     },
     servers: [{ url: "http://127.0.0.1:{port}/api/v1", variables: { port: { default: "49152", description: "Replace with the port printed by your local Scrawl companion." } } }],
     security: [{ sessionToken: [] }],

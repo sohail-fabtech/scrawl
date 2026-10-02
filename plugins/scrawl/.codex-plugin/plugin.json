@@ -17,7 +17,7 @@
     ],
     "defaultPrompt": "Use Scrawl to sketch three distinct wireframe directions before building."
   },
-  "homepage": "https://scrawl.sh/docs/plugin",
+  "homepage": "https://scrawl.jscrate.dev/docs/plugin",
   "repository": "https://github.com/pablostanley/squig",
   "license": "MIT"
 }

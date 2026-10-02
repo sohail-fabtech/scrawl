@@ -1777,8 +1777,8 @@ export const changelogDef: ComponentDef = {
 // -- contact form -----------------------------------------------------------
 
 const CONTACT_ROWS: [string, string][] = [
-  ["envelope", "hi@scrawl.sh"],
-  ["phone", "+1 (555) 010-0101"],
+  ["envelope", "hi@jscrate.dev"],
+  ["phone", "+92 311 6379423"],
   ["map-pin", "Somewhere with good light"],
 ]
 

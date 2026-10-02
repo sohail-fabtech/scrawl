@@ -127,4 +127,4 @@ Old cloud canvas links are for read-only recovery and export.
    `scrawl_restore` provide local recovery capped at 50 snapshots and 16 MiB per
    file; save separate copies for versions that must not expire.
 
-Read `https://scrawl.sh/llms-full.txt` for tool schemas, setup and limits.
+Read `https://scrawl.jscrate.dev/llms-full.txt` for tool schemas, setup and limits.

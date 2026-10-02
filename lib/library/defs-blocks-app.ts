@@ -263,14 +263,14 @@ export const accountBlockDef: ComponentDef = {
     const d = Math.min(64, h * 0.16)
     prims.push(...sub(avatarDef, { content: "initials", initials: "PS" }, pad, y, d, d))
     prims.push(text(pad + d + 16, y + d * 0.42, "Pablo Scribbles", 16, { bold: true }))
-    prims.push(text(pad + d + 16, y + d * 0.42 + 20, "pablo@scrawl.sh", 13, { color: "muted" }))
+    prims.push(text(pad + d + 16, y + d * 0.42 + 20, "hi@jscrate.dev", 13, { color: "muted" }))
     if (bool(p, "photo") && cw > 330) {
       prims.push(...sub(buttonDef, { label: "Change photo", variant: "outline", size: "sm" }, w - pad - 128, y + d / 2 - 17, 128, 34))
     }
     y += d + 22
 
     const labels = ["Display name", "Email", "Where you are", "Short bio"]
-    const values = ["Pablo Scribbles", "pablo@scrawl.sh", "Somewhere warm", "Draws boxes for money"]
+    const values = ["Pablo Scribbles", "hi@jscrate.dev", "Somewhere warm", "Draws boxes for money"]
     const n = clamp(num(p, "fields", 3), 1, 4)
     const footTop = h - 56
     const fieldH = clamp((footTop - 6 - y - 12 * (n - 1)) / n, 46, 58)
@@ -975,12 +975,12 @@ export const searchResultsDef: ComponentDef = {
 
     const n = clamp(num(p, "results", 4), 1, 6)
     const urls = [
-      "scrawl.sh › library › boxes",
-      "docs.scrawl.sh › drawing",
-      "blog.scrawl.sh › why-wobbly",
-      "scrawl.sh › templates › app",
-      "forum.scrawl.sh › t › 4821",
-      "scrawl.sh › changelog",
+      "scrawl.jscrate.dev › library › boxes",
+      "docs.scrawl.jscrate.dev › drawing",
+      "blog.scrawl.jscrate.dev › why-wobbly",
+      "scrawl.jscrate.dev › templates › app",
+      "forum.scrawl.jscrate.dev › t › 4821",
+      "scrawl.jscrate.dev › changelog",
     ]
     const titles = [
       "Boxes, but wobbly — the scrawl library",

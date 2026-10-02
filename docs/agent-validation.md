@@ -90,7 +90,7 @@ access, copy feedback, mobile layout and errors as well as type safety.
 ## Practical limits
 
 After deploying, verify the website with
-`SCRAWL_TEST_URL=https://scrawl.sh node scripts/agent/release-browser.mjs`.
+`SCRAWL_TEST_URL=https://scrawl.jscrate.dev node scripts/agent/release-browser.mjs`.
 It checks browser-local persistence, setup and documentation, response headers,
 and retired hosted endpoints. It confirms retirement before testing any formerly
 mutating route. For a protected preview, provide its temporary access URL in

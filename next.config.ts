@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Webxdc packaging (`make build-xdc`) needs a fully static site at out/.
-// Normal `pnpm build` keeps the default Next server output for scrawl.sh.
+// Normal `pnpm build` keeps the default Next server output for scrawl.jscrate.dev.
 const webxdc = process.env.WEBXDC === "1";
 const localEditor = process.env.SCRAWL_LOCAL_EXPORT === "1";
 const staticExport = webxdc || localEditor;

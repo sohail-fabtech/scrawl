@@ -588,7 +588,7 @@ check(
   origin() === "https://scrawl-abc123.vercel.app",
 )
 delete process.env.VERCEL_ENV
-check("and off Vercel entirely, at scrawl.sh", origin() === "https://scrawl.sh")
+check("and off Vercel entirely, at scrawl.jscrate.dev", origin() === "https://scrawl.jscrate.dev")
 delete process.env.VERCEL_URL
 
 // -- real face metrics drive both diagnostics and the SVG's line breaks -----
@@ -938,7 +938,7 @@ neonConfig.fetchFunction = async (_url: string, init: RequestInit) => {
 }
 process.env.DATABASE_URL = "postgresql://test:test@security.invalid/test"
 try {
-  const req = (secret?: string) => new Request("https://scrawl.sh/api/v1/documents", { headers: secret ? { Authorization: `Bearer ${secret}` } : {} })
+  const req = (secret?: string) => new Request("https://scrawl.jscrate.dev/api/v1/documents", { headers: secret ? { Authorization: `Bearer ${secret}` } : {} })
   for (const bad of [undefined, "bad", "sq_canvas_invalid", "sq_" + "x".repeat(5000)])
     check("malformed bearer is rejected without a database call", await statusOf(() => authenticate(req(bad))) === 401 && queries === 0)
   check("workspace authentication has no document scope", same(await authenticate(req(workspaceSecret)), { workspaceId: "w" }))

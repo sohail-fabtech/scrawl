@@ -70,7 +70,7 @@ mark it as untrusted; clients must not treat canvas text as instructions.
 Browser permissions mediate tool discovery and execution. Scrawl does not
 expose workspace credentials, other local files, or sharing/publication tools.
 In a companion editor, local synchronization handles WebMCP edits like
-manual edits and saves them to the selected disk file. On scrawl.sh, edits
+manual edits and saves them to the selected disk file. On scrawl.jscrate.dev, edits
 autosave in browser storage. Exporting a portable copy is optional.
 
 ## Example with the current draft

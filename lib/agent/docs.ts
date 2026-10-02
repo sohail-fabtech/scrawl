@@ -135,7 +135,7 @@ window.scrawl.zoomToFit()`,
       },
       {
         title: "Where the changes are saved",
-        text: "On scrawl.sh, both human and agent edits autosave to browser storage. Export a copy is optional and creates a separate portable .scrawl.json; clearing browser data can remove drafts. In a companion editor, browser-agent changes synchronize to the selected file on disk. Moving a website drawing to a companion is an explicit export-and-open workflow, separate from inviting a browser agent. Import opens a new local drawing while preserving the previous file and refuses to discard pending companion edits.",
+        text: "On scrawl.jscrate.dev, both human and agent edits autosave to browser storage. Export a copy is optional and creates a separate portable .scrawl.json; clearing browser data can remove drafts. In a companion editor, browser-agent changes synchronize to the selected file on disk. Moving a website drawing to a companion is an explicit export-and-open workflow, separate from inviting a browser agent. Import opens a new local drawing while preserving the previous file and refuses to discard pending companion edits.",
       },
     ],
   },
@@ -146,7 +146,7 @@ window.scrawl.zoomToFit()`,
     sections: [
       {
         title: "One command model",
-        text: "The companion exposes POST /api/v1/tools/{name}; MCP uses scrawl_{name} with the same JSON input. Session discovery uses scrawl_local_session over MCP or GET /api/local/session over HTTP. Use the loopback origin returned by your running session. The public scrawl.sh server does not accept new canvas writes. /openapi.json describes the local API shapes; tools are discovered from the running MCP server.",
+        text: "The companion exposes POST /api/v1/tools/{name}; MCP uses scrawl_{name} with the same JSON input. Session discovery uses scrawl_local_session over MCP or GET /api/local/session over HTTP. Use the loopback origin returned by your running session. The public scrawl.jscrate.dev server does not accept new canvas writes. /openapi.json describes the local API shapes; tools are discovered from the running MCP server.",
       },
       {
         title: "Connect to the selected file",
