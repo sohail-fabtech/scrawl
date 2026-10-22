@@ -3,7 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AgentShell } from "@/components/agent/shell"
 import { pages } from "@/lib/agent/docs"
-import { localTools as tools } from "@/lib/agent/local-service"
+import { localTools as tools } from "@/lib/agent/local-tools"
 export const dynamicParams = false
 export function generateStaticParams() {
   return pages.map((p) => ({ slug: p.slug }))

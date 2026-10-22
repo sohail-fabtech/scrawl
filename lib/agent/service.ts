@@ -199,39 +199,11 @@ export async function execute(
         },
       }
     }
-    case "measure_text": {
-      const a = tools.measure_text.schema.parse(args),
-        row = await owned(workspace, a.documentId)
-      if (a.nodeIds?.some((id) => !Object.hasOwn(row.document.nodes, id)))
-        throw new AgentError(404, "Node not found")
-      const { measureDocumentText } = await import("./text-metrics")
-      return {
-        revision: row.revision,
-        measurements: measureDocumentText(row.document, a.nodeIds),
-      }
-    }
-    case "render_document": {
-      const a = tools.render_document.schema.parse(args),
-        row = await owned(workspace, a.documentId)
-      const { renderSvg, renderPng, pngDocument } = await import("./render")
-      const rendered = renderSvg(
-        a.format === "png" ? await pngDocument(row.document) : row.document,
-        a.variationId,
-      )
-      if (a.format === "svg")
-        return {
-          ...rendered,
-          mimeType: "image/svg+xml",
-          revision: row.revision,
-        }
-      const png = await renderPng(rendered.svg)
-      return {
-        mimeType: "image/png",
-        base64: png.toString("base64"),
-        bounds: rendered.bounds,
-        revision: row.revision,
-      }
-    }
+    // Rendering needs native/fs code that the hosted (Workers) build can't
+    // carry; the local companion (local-service.ts) serves both tools.
+    case "measure_text":
+    case "render_document":
+      throw new AgentError(410, "Rendering runs in the local Scrawl companion. See /docs/mcp.")
     case "delete_document": {
       const a = tools.delete_document.schema.parse(args)
       await owned(workspace, a.documentId)

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { localTools as tools } from "@/lib/agent/local-service"
+import { localTools as tools } from "@/lib/agent/local-tools"
 export const dynamic = "force-static"
 export function GET() {
   const jsonContent = (schema: object) => ({
